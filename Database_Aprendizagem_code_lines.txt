@@ -1,0 +1,119 @@
+-- Criando uma nova base de dados com finalidade demonstrativa
+
+create database if not exists aprendizagem;
+use aprendizagem;
+
+create table if not exists alunos (
+	id_aluno int not null auto_increment,
+    nome varchar(50) not null unique,
+    nascimento date,
+    sexo enum('M', 'F'),
+    peso decimal(5, 2),
+    altura decimal(3, 2),
+    nacionalidade varchar(20) default 'Brasil',
+    primary key(id_aluno)
+) default charset = utf8;
+
+desc alunos;
+
+insert into alunos values
+		(default, 'Marcos Ribeiro', '1996-05-17', 'M', '76.6', '1.75', 'Brasil'),
+        (default, 'Washington Houston', '1988-12-21', 'M', '82.5', '1.80', 'EUA'),
+        (default, 'Zaniua Shang', '1992-10-19', 'F', '60.4', '1.63', 'China'),
+        (default, 'Maria Almeida', '1989-07-15', 'F', '52.8', '1.55', default),
+        (default, 'Stephany Grindge', '1994-08-12', 'F', '59.7', '1.58', 'EUA'),
+        (default, 'Claudia Schmed', '1988-04-06', 'F', '66.4', '1.68', 'Alemanha'),
+        (default, 'Anselmo Correia', '1990-08-08', 'M', '88.6', '1.91', default),
+        (default, 'Clarice Prada', '1992-03-01', 'F', '62.1', '1.63', default),
+        (default, 'Giovanni Martin', '1990-07-09', 'M', '77.8', '1.74', 'Espanha'),
+        (default, 'Valentina Pellegrini', '1989-08-12', 'F', '71.4', '1.72', 'Itália'),
+        (default, 'Antonia Soares', '1993-06-13', 'F', '61.9', '1.65', default),
+        (default, 'Mark Zanurr', '1989-11-04', 'M', '81.1', '1.80', 'Canadá'),
+        (default, 'Jonas Nielsen', '1994-10-08', 'M', '74.5', '1.75', 'Alemanha'),
+        (default, 'Janilson Martins', '1991-05-17', 'M', '83.3', '1.84', default),
+        (default, 'Numan Çakmak', '1988-02-25', 'M', '88.5', '1.76', 'Turquia');
+        
+select * from alunos;
+
+-- Mudando o nome do campo 'nacionalidade' para 'nacao':
+alter table alunos change column nacionalidade nacao varchar(20);
+alter table alunos modify column nacao varchar(20) default 'Brasil';
+
+-- /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+-- Criando uma tabela de cursos:
+create table if not exists cursos (
+	id_curso int not null auto_increment,
+    nome_curso varchar(20) not null unique,
+    carga int not null,
+    ano int,
+    primary key(id_curso)
+) default charset = utf8;
+
+insert into cursos values
+	(default, 'Algoritmos', '20', '2014'),
+    (default, 'HTML5 e CSS3', '40', '2015'),
+    (default, 'PHP Básico', '30', '2016'),
+    (default, 'Fundamentos de Java', '40', '2012'),
+    (default, 'MySQL Básico', '30', '2016'),
+    (default, 'POO', '60', '2015'),
+    (default, 'Introdução ao C#', '40', '2015'),
+    (default, 'JavaScript', '40', '2014'),
+    (default, 'Python', '60', '2015'),
+    (default, 'Hardware', '30', '2013');
+    
+select * from cursos;
+
+-- Criando chave estrangeira na tabela 'alunos' para interligá-la com a tabela 'cursos':
+alter table alunos add column codicurso int;
+
+alter table alunos add foreign key (codicurso)
+	references cursos (id_curso);
+
+desc alunos;
+
+-- Cria-se uma tabela para que se estabeleça a relação de muitos para muitos, integrando-se as chaves estrangeiras 'idaluno' e 'idcurso':
+create table if not exists aluno_faz_curso (
+	id int not null auto_increment,
+    data date,
+    idaluno int,
+    idcurso int,
+    primary key (id),
+    foreign key (idaluno) references alunos (id_aluno),
+    foreign key (idcurso) references cursos (id_curso)
+) default charset = utf8;
+
+select max(ano) MAX from cursos;
+select min(ano) MIN from cursos;
+
+select * from aluno_faz_curso;
+
+insert into aluno_faz_curso values
+	(default, '2017-01-02', '1', '3'),
+    (default, '2013-07-11', '2', '10'),
+    (default, '2015-09-19', '3', '7'),
+    (default, '2014-12-07', '4', '8'),
+    (default, '2015-11-14', '5', '2'),
+    (default, '2014-05-22', '6', '1'),
+    (default, '2015-08-08', '7', '6'),
+    (default, '2016-01-13', '8', '9'),
+    (default, '2016-12-06', '9', '5'),
+    (default, '2014-06-09', '10', '8'),
+    (default, '2015-05-27', '11', '7'),
+    (default, '2016-07-10', '12', '2'),
+    (default, '2016-04-30', '13', '3'),
+    (default, '2012-09-17', '14', '4'),
+    (default, '2017-03-21', '15', '5');
+    
+-- Consultando os dados de todos os alunos com seus respectivos cursos (uso do 'join'):
+select * from alunos
+	join aluno_faz_curso faz
+    on faz.idaluno = alunos.id_aluno;
+    
+-- Agora, consultemos apenas o id_aluno, nome, nacao, curso e data de ingresso:
+select alunos.id_aluno ID, alunos.nome NOME, alunos.nacao NAÇÃO, cursos.nome_curso CURSO, faz.data INGRESSO from alunos
+	join aluno_faz_curso faz
+    on faz.idaluno = alunos.id_aluno
+    join cursos
+    on faz.idcurso = cursos.id_curso
+    order by alunos.nome;
